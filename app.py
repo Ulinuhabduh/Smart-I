@@ -207,13 +207,8 @@ with col_map:
 
     # Menambahkan shapefile hasil segmentasi jika checkbox dipilih
     show_segmented = st.checkbox("Tampilkan Segmentasi")
-    if show_segmented and shapefile_index <= len(new_shapefiles):
-        segmented_file_name = new_shapefiles[shapefile_index - 1]
-        segmented_shapefile_path = os.path.join(new_shapefiles_folder, segmented_file_name)
-        segmented_gdf = gpd.read_file(segmented_shapefile_path)
-
-        # Menambahkan data shapefile hasil segmentasi ke peta dengan border berwarna ungu
-        def segment_style_function(feature):
+    # Menambahkan data shapefile hasil segmentasi ke peta dengan border berwarna ungu
+    def segment_style_function(feature):
             gridcode = feature['properties'].get('gridcode', 0)
             color = get_color(gridcode)
             return {
@@ -222,8 +217,19 @@ with col_map:
                 'weight': 2,  # Ketebalan border
                 'fillOpacity': 1
             }
+    if show_segmented and shapefile_index <= len(new_shapefiles):
+        # Cek apakah ada segmentasi dengan nama yang sama
+        selected_file_name = shapefiles[shapefile_index - 1]
+        segmented_file_name = selected_file_name  # Sesuaikan nama segmentasi dengan nama file asli
 
-        m.add_gdf(segmented_gdf, layer_name=segmented_file_name, style_function=segment_style_function)
+        # Pastikan ada segmentasi dengan nama yang sama di folder segmentasi
+        segmented_shapefile_path = os.path.join(new_shapefiles_folder, segmented_file_name)
+        if os.path.exists(segmented_shapefile_path):
+            segmented_gdf = gpd.read_file(segmented_shapefile_path)
+            # Menambahkan data shapefile hasil segmentasi ke peta dengan border berwarna ungu
+            m.add_gdf(segmented_gdf, layer_name=segmented_file_name, style_function=segment_style_function)
+        else:
+            st.write("Tidak ada segmentasi yang cocok.")
 
     # Menampilkan peta di Streamlit
     m.to_streamlit(width=800, height=600)
