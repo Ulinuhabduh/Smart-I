@@ -3,8 +3,8 @@ import leafmap.foliumap as leafmap
 import geopandas as gpd
 import os
 
-# Mengatur layout menjadi "wide"
-st.set_page_config(layout="wide")
+# Mengatur layout menjadi "wide" dan mengubah nama tab
+st.set_page_config(page_title="Smart-I: Forest City Monitoring", layout="wide")
 
 # Menambahkan CSS untuk background dark
 st.markdown(
@@ -154,7 +154,7 @@ with col_info:
     # Menampilkan gambar statistik berdasarkan indeks
     statistik_image_path = os.path.join(statistik_folder, f"{shapefile_index}.png")
     if os.path.exists(statistik_image_path):
-        st.image(statistik_image_path, caption="Statistik Shapefile", use_column_width=True)
+        st.image(statistik_image_path, use_column_width=True)
     else:
         st.write("Gambar statistik tidak tersedia.")
 
@@ -169,9 +169,10 @@ with col_info:
     st.write(f"**Koordinat Pusat:** {center}")
 
     # Menampilkan informasi metadata
-    st.write("### Metadata:")
-    st.write(f"- **Tipe Geometris:** {gdf.geom_type.iloc[0]}")
-    st.write(f"- **Proyeksi Koordinat:** {gdf.crs}")
+    st.write("### Referensi Spasial:")
+    st.write(f"- **Proyeksi : Universal Transverse Mercator**")
+    st.write(f"- **Datum : WGS 1984**")
+    st.write(f"- **Zona : 50S**")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -189,7 +190,7 @@ with col_map:
             4: "#FFFF00",  # Kuning
             5: "#FFA500",  # Oranye
         }
-        return color_map.get(gridcode, "#FFFFFF")  # Default warna abu-abu jika tidak ada di peta warna
+        return color_map.get(gridcode, "#FF0000")  # Default warna abu-abu jika tidak ada di peta warna
 
     # Menambahkan data shapefile yang dipilih ke peta dengan warna berdasarkan gridcode
     def style_function(feature):
@@ -245,6 +246,9 @@ with col1:
         <div style="display: block; text-align: center;">
             <p style='color: #75F442; font-size: 1.5rem'>Mohammad Rifqi Alfarizi</p>
             <div style="display: inline-flex; gap: 10px;">
+                <a href="https://www.linkedin.com/in/mohammad-rifqi-alfarizi-183517315?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Linkedin_icon.svg" width="30" style="margin-bottom: 10px;">
+                </a>
                 <a href="https://www.instagram.com/rifqialfarizi" target="_blank">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="30" style="margin-bottom: 10px;">
                 </a>
