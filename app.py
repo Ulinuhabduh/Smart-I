@@ -7,9 +7,9 @@ import os
 st.set_page_config(layout="wide")
 
 # Menentukan jalur file logo
-smart_i_logo_path = "C:/Users/mulin/Lomba/Geopoint/Images/logo_gabungan.png"  # Ganti dengan jalur file logo Smart-I
-other_logo_path = "C:/Users/mulin/Lomba/Geopoint/Images/logo gg gemink.png"  # Ganti dengan jalur file logo lainnya
-statistik_folder = "C:/Users/mulin/Lomba/Geopoint/Images/statistik"  
+smart_i_logo_path = "Images/logo_gabungan.png"  # Ganti dengan jalur file logo Smart-I
+other_logo_path = "Images/logo gg gemink.png"  # Ganti dengan jalur file logo lainnya
+statistik_folder = "Images/statistik"  
 
 st.image(smart_i_logo_path)
 
@@ -51,8 +51,8 @@ initial_location = [-2.548926, 118.0148634]  # Koordinat pusat Indonesia
 zoom_level = 5
 
 # Menentukan folder tempat shapefile berada
-shapefile_folder = 'C:/Users/mulin/Lomba/Geopoint/Supervised/'
-new_shapefiles_folder = 'C:/Users/mulin/Lomba/Geopoint/SAM SEMUA/'
+shapefile_folder = 'Supervised/'
+new_shapefiles_folder = 'SAM SEMUA/'
 
 # Mendapatkan daftar file shapefile
 shapefiles = [f for f in os.listdir(shapefile_folder) if f.endswith('.shp')]
