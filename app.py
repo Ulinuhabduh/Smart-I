@@ -6,6 +6,27 @@ import os
 # Mengatur layout menjadi "wide"
 st.set_page_config(layout="wide")
 
+# Menambahkan CSS untuk background dark
+st.markdown(
+    """
+    <style>
+    /* Mengubah warna latar belakang */
+    body {
+        background-color: #121212; /* Warna latar belakang dark */
+    }
+    /* Mengubah warna teks default */
+    .stText, .stMarkdown, .stButton > button {
+        color: #e0e0e0; /* Warna teks light agar mudah terbaca di background dark */
+    }
+    /* Styling khusus untuk elemen-elemen tertentu */
+    .css-18e3th9 { /* Sesuaikan dengan class yang sesuai untuk elemen seperti header */
+        color: #75F442 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Menentukan jalur file logo
 smart_i_logo_path = "Images/logo_gabungan.png"  # Ganti dengan jalur file logo Smart-I
 other_logo_path = "Images/logo gg gemink.png"  # Ganti dengan jalur file logo lainnya
