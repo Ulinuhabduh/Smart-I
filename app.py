@@ -6,36 +6,13 @@ import os
 # Mengatur layout menjadi "wide" dan mengubah nama tab
 st.set_page_config(page_title="Smart-I: Forest City Monitoring", layout="wide")
 
-# Menambahkan CSS untuk background dark
-st.markdown(
-    """
-    <style>
-    /* Mengubah warna latar belakang */
-    body {
-        background-color: #121212; /* Warna latar belakang dark */
-    }
-    /* Mengubah warna teks default */
-    .stText, .stMarkdown, .stButton > button {
-        color: #e0e0e0; /* Warna teks light agar mudah terbaca di background dark */
-    }
-    /* Styling khusus untuk elemen-elemen tertentu */
-    .css-18e3th9 { /* Sesuaikan dengan class yang sesuai untuk elemen seperti header */
-        color: #75F442 !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 # Menentukan jalur file logo
-smart_i_logo_path = "Images/logo_gabungan.png"  # Ganti dengan jalur file logo Smart-I
-other_logo_path = "Images/logo gg gemink.png"  # Ganti dengan jalur file logo lainnya
+smart_i_logo_path = "Images/logo_gabungan.png"  
 statistik_folder = "Images/statistik"  
 
 st.image(smart_i_logo_path)
 
 # Tanda panah besar mengarah ke bawah
-# Menambahkan panah mengarah ke bawah
 st.markdown(
     """
     <div style="text-align: center; font-size: 150px; color: #800080; margin: -250px 0 20px 0;">
@@ -68,54 +45,27 @@ st.markdown(
 st.write("<hr>", unsafe_allow_html=True)
 
 # Menentukan lokasi awal peta (misalnya di Indonesia)
-initial_location = [-2.548926, 118.0148634]  # Koordinat pusat Indonesia
+initial_location = [-2.548926, 118.0148634] 
 zoom_level = 5
 
 # Menentukan folder tempat shapefile berada
-shapefile_folder = 'Supervised/'
 new_shapefiles_folder = 'SAM SEMUA/'
 
 # Mendapatkan daftar file shapefile
-shapefiles = [f for f in os.listdir(shapefile_folder) if f.endswith('.shp')]
 new_shapefiles = [f for f in os.listdir(new_shapefiles_folder) if f.endswith('.shp')]
 
 # Inisialisasi session state untuk indeks shapefile
 if 'shapefile_index' not in st.session_state:
     st.session_state['shapefile_index'] = 1
 
-# Menampilkan tombol navigasi dengan warna biru menggunakan CSS
-st.markdown(
-    """
-    <style>
-    .stButton > button {
-        background-color: #800080;
-        color: white;
-        padding: 10px 10px;
-        border: none;
-        border-radius: 4px;
-        margin: 0 auto;
-        display: block;
-        font-size: 10px;
-    }
-    .center-content {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        height: 100%;
-        margin: 0 auto;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+# Menampilkan tombol navigasi
 col1, col2, col3 = st.columns([3, 1, 3])
 
 with col1:
     st.write("")
 
 with col2:
-    col5, col6 = st.columns([1,1])
+    col5, col6 = st.columns([1, 1])
     with col5:
         previous = st.button("Previous", use_container_width=True)
     with col6:
@@ -127,10 +77,10 @@ with col3:
 if previous:
     st.session_state['shapefile_index'] -= 1
     if st.session_state['shapefile_index'] < 1:
-        st.session_state['shapefile_index'] = len(shapefiles)
+        st.session_state['shapefile_index'] = len(new_shapefiles)
 elif next:
     st.session_state['shapefile_index'] += 1
-    if st.session_state['shapefile_index'] > len(shapefiles):
+    if st.session_state['shapefile_index'] > len(new_shapefiles):
         st.session_state['shapefile_index'] = 1
 
 # Menampilkan indeks shapefile saat ini
@@ -140,15 +90,13 @@ shapefile_index = st.session_state['shapefile_index']
 col_info, col_map = st.columns([2, 3])
 
 with col_info:
-
     st.markdown('<div class="center-content">', unsafe_allow_html=True)
-    # Menggunakan HTML dan CSS untuk menampilkan border di sekitar informasi
     st.markdown(
-    """
-    <div style="border: 2px solid #800080; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="text-align: center;">Informasi Segmentasi</h3>
-    """,
-    unsafe_allow_html=True
+        """
+        <div style="border: 2px solid #800080; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h3 style="text-align: center;">Informasi Segmentasi</h3>
+        """,
+        unsafe_allow_html=True
     )
 
     # Menampilkan gambar statistik berdasarkan indeks
@@ -158,8 +106,8 @@ with col_info:
     else:
         st.write("Gambar statistik tidak tersedia.")
 
-    selected_file_name = shapefiles[shapefile_index - 1]
-    shapefile_path = os.path.join(shapefile_folder, selected_file_name)
+    selected_file_name = new_shapefiles[shapefile_index - 1]
+    shapefile_path = os.path.join(new_shapefiles_folder, selected_file_name)
     gdf = gpd.read_file(shapefile_path)
 
     # Mendapatkan pusat dari bounding box shapefile
@@ -181,58 +129,22 @@ with col_map:
     m = leafmap.Map(center=initial_location, zoom=zoom_level)
     m.add_basemap("Esri.WorldImagery")
 
-    # Fungsi untuk menentukan warna berdasarkan nilai gridcode
-    def get_color(gridcode):
-        color_map = {
-            1: "#FF0000",  # Merah
-            2: "#00FF00",  # Hijau
-            3: "#0000FF",  # Biru
-            4: "#FFFF00",  # Kuning
-            5: "#FFA500",  # Oranye
-        }
-        return color_map.get(gridcode, "#FF0000")  # Default warna abu-abu jika tidak ada di peta warna
 
-    # Menambahkan data shapefile yang dipilih ke peta dengan warna berdasarkan gridcode
+    # Menambahkan data shapefile yang dipilih ke peta
     def style_function(feature):
         gridcode = feature['properties'].get('gridcode', 0)
-        color = get_color(gridcode)
         return {
-            'fillColor': color,
-            'color': color,
+            'fillColor': '#ff0000',
+            'color': '#808080',
             'weight': 2,
             'fillOpacity': 0.5
         }
 
     m.add_gdf(gdf, layer_name=selected_file_name, style_function=style_function)
 
-    # Menambahkan shapefile hasil segmentasi jika checkbox dipilih
-    show_segmented = st.checkbox("Tampilkan Segmentasi")
-    # Menambahkan data shapefile hasil segmentasi ke peta dengan border berwarna ungu
-    def segment_style_function(feature):
-            gridcode = feature['properties'].get('gridcode', 0)
-            color = get_color(gridcode)
-            return {
-                'fillColor': color,
-                'color': "#800080",  # Warna border ungu untuk hasil segmentasi
-                'weight': 2,  # Ketebalan border
-                'fillOpacity': 1
-            }
-    if show_segmented and shapefile_index <= len(new_shapefiles):
-        # Cek apakah ada segmentasi dengan nama yang sama
-        selected_file_name = shapefiles[shapefile_index - 1]
-        segmented_file_name = selected_file_name  # Sesuaikan nama segmentasi dengan nama file asli
-
-        # Pastikan ada segmentasi dengan nama yang sama di folder segmentasi
-        segmented_shapefile_path = os.path.join(new_shapefiles_folder, segmented_file_name)
-        if os.path.exists(segmented_shapefile_path):
-            segmented_gdf = gpd.read_file(segmented_shapefile_path)
-            # Menambahkan data shapefile hasil segmentasi ke peta dengan border berwarna ungu
-            m.add_gdf(segmented_gdf, layer_name=segmented_file_name, style_function=segment_style_function)
-        else:
-            st.write("Tidak ada segmentasi yang cocok.")
-
     # Menampilkan peta di Streamlit
     m.to_streamlit(width=800, height=600)
+
 
 # Menambahkan bagian About Author sebelum footer
 st.write("<hr>", unsafe_allow_html=True)
@@ -265,8 +177,6 @@ with col1:
         unsafe_allow_html=True
     )
 
-
-
 with col2:
     author2_image_path = os.path.join(authors_folder, "2.png")  # Ganti dengan nama file gambar penulis 2
     st.image(author2_image_path, use_column_width=True)
@@ -288,7 +198,6 @@ with col2:
         """,
         unsafe_allow_html=True
     )
-
 
 with col3:
     author3_image_path = os.path.join(authors_folder, "3.png")  # Ganti dengan nama file gambar penulis 3
