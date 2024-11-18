@@ -2,6 +2,7 @@ import streamlit as st
 import leafmap.foliumap as leafmap
 import geopandas as gpd
 import os
+from pyproj import CRS, Transformer
 
 # Mengatur layout menjadi "wide" dan mengubah nama tab
 st.set_page_config(page_title="Smart-I: Forest City Monitoring", layout="wide")
@@ -110,11 +111,22 @@ with col_info:
     shapefile_path = os.path.join(new_shapefiles_folder, selected_file_name)
     gdf = gpd.read_file(shapefile_path)
 
-    # Mendapatkan pusat dari bounding box shapefile
-    center = gdf.geometry.unary_union.centroid.coords[0]
+    # CRS asal (proyeksi shapefile, misalnya UTM)
+    source_crs = gdf.crs  # CRS dari shapefile
+    # CRS target (WGS84 untuk latitude dan longitude)
+    target_crs = CRS.from_epsg(4326)
 
-    # Menampilkan informasi pusat koordinat shapefile
-    st.write(f"**Koordinat Pusat:** {center}")
+    # Membuat transformasi dari source_crs ke target_crs
+    transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+
+    # Mendapatkan koordinat pusat dalam proyeksi shapefile
+    projected_center = gdf.geometry.unary_union.centroid.coords[0]
+
+    # Transformasi ke latitude dan longitude
+    lon, lat = transformer.transform(projected_center[0], projected_center[1])
+
+    # Menampilkan hasil
+    st.write(f"**Koordinat Pusat :** ({lat}, {lon})")
 
     # Menampilkan informasi metadata
     st.write("### Referensi Spasial:")
