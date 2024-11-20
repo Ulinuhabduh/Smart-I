@@ -72,7 +72,7 @@ if previous or next:
             st.session_state['shapefile_index'] = len(new_shapefiles) - 1  # Kembali ke akhir jika kurang dari 0
     if next:
         st.session_state['shapefile_index'] += 1
-        if st.session_state['shapefile_index'] >= len(new_shapefiles):
+        if st.session_state['shapefile_index'] > len(new_shapefiles):
             st.session_state['shapefile_index'] = 0  # Kembali ke awal jika melebihi jumlah file
 
 
