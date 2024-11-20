@@ -126,7 +126,7 @@ with col_info:
     lon, lat = transformer.transform(projected_center[0], projected_center[1])
 
     # Menampilkan hasil
-    st.write(f"**Koordinat Pusat :** ({lat}, {lon})")
+    st.write(f"**Koordinat Pusat :** ({lat:.5f}, {lon:.5f})")
 
     # Menampilkan informasi metadata
     st.write("### Referensi Spasial:")
@@ -137,22 +137,24 @@ with col_info:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_map:
-    # Membuat peta dasar dengan Leafmap
-    m = leafmap.Map(center=initial_location, zoom=zoom_level)
-    m.add_basemap("Esri.WorldImagery")
+    # Menambahkan tombol untuk memilih apakah segmentasi akan ditampilkan
+    show_segmentation = st.checkbox("Tampilkan Segmentasi pada Peta", value=False)
 
+    # Membuat peta dasar dengan Leafmap
+    m = leafmap.Map(center=[lat, lon], zoom=zoom_level)  # Fokus ke koordinat pusat segmen
+    m.add_basemap("Esri.WorldImagery")
 
     # Menambahkan data shapefile yang dipilih ke peta
     def style_function(feature):
-        gridcode = feature['properties'].get('gridcode', 0)
         return {
-            'fillColor': '#ff0000',
-            'color': '#808080',
-            'weight': 2,
-            'fillOpacity': 0.5
+            'fillColor': '#ff0000',  # Warna isian
+            'color': '#808080',      # Warna batas
+            'weight': 2 if show_segmentation else 0,              # Ketebalan batas
+            'fillOpacity': 0.5 if show_segmentation else 0  # Ubah opacity berdasarkan tombol
         }
 
     m.add_gdf(gdf, layer_name=selected_file_name, style_function=style_function)
+
 
     # Menampilkan peta di Streamlit
     m.to_streamlit(width=800, height=600)
@@ -232,8 +234,6 @@ with col3:
         """,
         unsafe_allow_html=True
     )
-
-
 
 # Footer aplikasi
 st.write("<hr>", unsafe_allow_html=True)
