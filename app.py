@@ -97,7 +97,10 @@ with col_info:
     target_crs = CRS.from_epsg(4326)
     transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
     projected_center = gdf.geometry.unary_union.centroid.coords[0]
-    lon, lat = transformer.transform(projected_center[0], projected_center[1])
+    if source_crs is None:
+        st.error("Shapefile tidak memiliki CRS yang valid.")
+    else:
+        lon, lat = transformer.transform(projected_center[0], projected_center[1])
 
     # Membaca data statistik
     if os.path.exists(statistik_file_path):
