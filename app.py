@@ -1,164 +1,198 @@
 import streamlit as st
 import leafmap.foliumap as leafmap
 import geopandas as gpd
+import pandas as pd
 import os
 from pyproj import CRS, Transformer
+import matplotlib.pyplot as plt
 
 # Mengatur layout menjadi "wide" dan mengubah nama tab
-st.set_page_config(page_title="Smart-I: Forest City Monitoring", layout="wide")
+st.set_page_config(page_title="SMART-I: Forest City Monitoring", layout="wide")
 
-# Menentukan jalur file logo
-smart_i_logo_path = "Images/logo_gabungan.png"  
-statistik_folder = "Images/Data"  
+# Menentukan jalur file logo dan data statistik
+smart_i_logo_path = "Images/logo_gabungan.png"
+statistik_file_path = "Statistik.xlsx"  # File data statistik dari unggahan
+new_shapefiles_folder = "SAM SEMUA/"  # Folder shapefile
 
+# Menampilkan logo
 st.image(smart_i_logo_path)
 
-# Tanda panah besar mengarah ke bawah
-st.markdown(
-    """
-    <div style="text-align: center; font-size: 150px; color: #800080; margin: -250px 0 20px 0;">
-        &#x2193; <!-- Kode untuk panah besar ke bawah -->
+# Header aplikasi
+st.markdown("""
+<div style="text-align: center; font-size: 150px; color: #800080; margin: -250px 0 20px 0;">
+    &#x2193; <!-- Tanda panah -->
+</div>
+<div style="
+    border: 2px dashed #800080;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+">
+    <h1 style="text-decoration-line: underline; color: #75F442;">SMART-I</h1>
+    <div style="font-size: 20px; color: #75F442; margin-bottom: 10px;">
+        SEGMENT ANYTHING MODEL FOR RESILIENT AND SUSTAINABLE FOREST CITY IN IKN
     </div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    """
-    <div style="
-        border: 2px dashed #800080;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-    ">
-        <h1 style="text-decoration-line: underline; color: #75F442;">Smart-I</h1>
-        <div style="font-size: 20px; color: #75F442; margin-bottom: 10px;">
-            SEGMENT ANYTHING MODEL FOR RESILIENT AND SUSTAINABLE FOREST CITY IN IKN
-        </div>
-        <div style="font-size: 16px; color: white;">
-            SMART-I adalah model segmentasi berbasis kecerdasan buatan (AI) yang dirancang untuk memantau pembangunan IKN Nusantara secara akurat dan real-time dalam mendukung konsep Forest City. Dengan menggunakan Segment Anything Model (SAM), SMART-I mampu mendeteksi perubahan tutupan lahan dari citra satelit secara efisien, sehingga menjaga keseimbangan antara pembangunan dan kelestarian ekosistem hutan. Sistem ini terintegrasi dengan WebGIS interaktif, memungkinkan visualisasi data yang mudah dipahami dalam dashboard untuk mendukung pengambilan keputusan adaptif. Pendekatan ini diharapkan dapat mewujudkan pembangunan kota berkelanjutan di Indonesia dan menjadi inspirasi global.
-        </div>
+    <div style="font-size: 16px; color: white;">
+        SMART-I adalah model segmentasi berbasis kecerdasan buatan (AI) yang dirancang untuk memantau pembangunan IKN Nusantara secara akurat dan real-time. Dengan SAM (Segment Anything Model), SMART-I mendukung keseimbangan pembangunan dengan kelestarian ekosistem hutan melalui analisis tutupan lahan.
     </div>
-    """,
-    unsafe_allow_html=True
-)
+</div>
+""", unsafe_allow_html=True)
 
 st.write("<hr>", unsafe_allow_html=True)
 
-# Menentukan lokasi awal peta (misalnya di Indonesia)
-initial_location = [-2.548926, 118.0148634] 
 zoom_level = 5
 
-# Menentukan folder tempat shapefile berada
-new_shapefiles_folder = 'SAM SEMUA/'
+# Membaca daftar shapefiles dan mengurutkannya berdasarkan angka di nama file
+new_shapefiles = sorted(
+    [f for f in os.listdir(new_shapefiles_folder) if f.endswith('.shp')],
+    key=lambda x: int(x.split('.')[0])  # Mengurutkan berdasarkan angka sebelum .shp
+)
 
-# Mendapatkan daftar file shapefile
-new_shapefiles = [f for f in os.listdir(new_shapefiles_folder) if f.endswith('.shp')]
-
-# Inisialisasi session state untuk indeks shapefile
+# Inisialisasi session state untuk indeks shapefile dan status tombol
 if 'shapefile_index' not in st.session_state:
-    st.session_state['shapefile_index'] = 1
+    st.session_state['shapefile_index'] = 0
+if 'show_segmentation' not in st.session_state:
+    st.session_state['show_segmentation'] = False
 
-# Menampilkan tombol navigasi
+# Navigasi segmen dengan tombol Previous dan Next
 col1, col2, col3 = st.columns([3, 1, 3])
-
-with col1:
-    st.write("")
-
 with col2:
-    col5, col6 = st.columns([1, 1])
-    with col5:
+    col_prev, col_next = st.columns([1, 1])
+    with col_prev:
         previous = st.button("Previous", use_container_width=True)
-    with col6:
+    with col_next:
         next = st.button("Next", use_container_width=True)
 
-with col3:
-    st.write("")
+# Mengatur navigasi Previous dan Next
+if previous or next:
+    st.session_state['show_segmentation'] = False  # Matikan tombol jika Next atau Previous ditekan
+    if previous:
+        st.session_state['shapefile_index'] -= 1
+        if st.session_state['shapefile_index'] < 0:
+            st.session_state['shapefile_index'] = len(new_shapefiles) - 1  # Kembali ke akhir jika kurang dari 0
+    if next:
+        st.session_state['shapefile_index'] += 1
+        if st.session_state['shapefile_index'] >= len(new_shapefiles):
+            st.session_state['shapefile_index'] = 0  # Kembali ke awal jika melebihi jumlah file
 
-if previous:
-    st.session_state['shapefile_index'] -= 1
-    if st.session_state['shapefile_index'] < 1:
-        st.session_state['shapefile_index'] = len(new_shapefiles)
-elif next:
-    st.session_state['shapefile_index'] += 1
-    if st.session_state['shapefile_index'] > len(new_shapefiles):
-        st.session_state['shapefile_index'] = 1
 
-# Menampilkan indeks shapefile saat ini
+# Mendapatkan file shapefile yang dipilih berdasarkan indeks
 shapefile_index = st.session_state['shapefile_index']
+selected_file_name = new_shapefiles[shapefile_index]
+shapefile_path = os.path.join(new_shapefiles_folder, selected_file_name)
 
 # Membuat layout dengan dua kolom untuk informasi shapefile dan peta
 col_info, col_map = st.columns([2, 3])
 
 with col_info:
     st.markdown('<div class="center-content">', unsafe_allow_html=True)
-    st.markdown(
-        """
-        <div style="border: 2px solid #800080; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-            <h3 style="text-align: center;">Informasi Segmentasi</h3>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <div style="border: 2px solid #800080; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="text-align: center;">Informasi Segmentasi</h3>
+    """, unsafe_allow_html=True)
 
-    # Menampilkan gambar statistik berdasarkan indeks
-    statistik_image_path = os.path.join(statistik_folder, f"{shapefile_index}.png")
-    if os.path.exists(statistik_image_path):
-        st.image(statistik_image_path, use_column_width=True)
-    else:
-        st.write("Gambar statistik tidak tersedia.")
-
-    selected_file_name = new_shapefiles[shapefile_index - 1]
-    shapefile_path = os.path.join(new_shapefiles_folder, selected_file_name)
+    # Membaca shapefile
     gdf = gpd.read_file(shapefile_path)
-
-    # CRS asal (proyeksi shapefile, misalnya UTM)
-    source_crs = gdf.crs  # CRS dari shapefile
-    # CRS target (WGS84 untuk latitude dan longitude)
+    source_crs = gdf.crs
     target_crs = CRS.from_epsg(4326)
-
-    # Membuat transformasi dari source_crs ke target_crs
     transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+    center = gdf.geometry.unary_union.centroid.coords[0]
+    lon, lat = transformer.transform(center[0], center[1])
 
-    # Mendapatkan koordinat pusat dalam proyeksi shapefile
-    projected_center = gdf.geometry.unary_union.centroid.coords[0]
+    # Membaca data statistik
+    if os.path.exists(statistik_file_path):
+        statistik_data = pd.read_excel(statistik_file_path)
 
-    # Transformasi ke latitude dan longitude
-    lon, lat = transformer.transform(projected_center[0], projected_center[1])
+        # Filter data berdasarkan shapefile yang dipilih
+        segmen_data = statistik_data[statistik_data["Segmen"] == selected_file_name]
 
-    # Menampilkan hasil
-    st.write(f"**Koordinat Pusat :** ({lat:.5f}, {lon:.5f})")
+        # Menampilkan statistik
+        st.write("### Statistik Segmen")
+        if not segmen_data.empty:
 
-    # Menampilkan informasi metadata
+            # Visualisasi Statistik Horizontal
+            plt.style.use('dark_background')  # Mengatur tema menjadi gelap
+            fig, axes = plt.subplots(3, 1, figsize=(8, 5))
+
+            # Plot Jumlah Fitur (Horizontal)
+            axes[0].barh(["Ground Truth", "SAM"], [segmen_data["Ground Truth (Fitur)"].iloc[0], segmen_data["SAM (Fitur)"].iloc[0]],
+                        color=["orange", "green"])
+            axes[0].set_title("Jumlah Fitur", loc='center', fontsize=12, fontweight='bold', color='white')
+            axes[0].set_xlabel("Jumlah", color='white', fontweight='bold')
+            axes[0].set_xlim(0, max(segmen_data["Ground Truth (Fitur)"].iloc[0], segmen_data["SAM (Fitur)"].iloc[0]) * 1.2)
+
+            # Plot Luas Fitur (Horizontal)
+            axes[1].barh(["Ground Truth", "SAM"], [segmen_data["Ground Truth (Luas)"].iloc[0], segmen_data["SAM (Luas)"].iloc[0]],
+                        color=["orange", "green"])
+            axes[1].set_title("Luas Fitur (Ha)", loc='center', fontsize=12, color='white', fontweight='bold')
+            axes[1].set_xlabel("Luas (Ha)", fontweight='bold', color='white')
+            axes[1].set_xlim(0, max(segmen_data["Ground Truth (Luas)"].iloc[0], segmen_data["SAM (Luas)"].iloc[0]) * 1.2)
+
+            # Plot IoU (Horizontal)
+            axes[2].barh(["Sukses", "Error"], [segmen_data["IOU (%)"].iloc[0], 100 - segmen_data["IOU (%)"].iloc[0]],
+                        color=["green", "orange"])
+            axes[2].set_title("IoU (%)", loc='center', fontsize=12, fontweight='bold', color='white')
+            axes[2].set_xlabel("Persentase", fontweight='bold', color='white')
+            axes[2].set_xlim(0, 100)
+
+            # Menyesuaikan tampilan
+            for ax in axes:
+                ax.tick_params(axis='x', colors='white')
+                ax.tick_params(axis='y', colors='white')
+                ax.spines['bottom'].set_color('white')
+                ax.spines['left'].set_color('white')
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+
+            fig.tight_layout()
+            st.pyplot(fig)
+
+        else:
+            st.warning("Data statistik untuk segmen ini tidak ditemukan.")
+    else:
+        st.error("File data statistik tidak ditemukan.")
+    
+    # Menampilkan metadata
     st.write("### Referensi Spasial:")
+    st.write(f"**Koordinat Pusat :** ({lat:.5f}, {lon:.5f})")
     st.write(f"- **Proyeksi : Universal Transverse Mercator**")
     st.write(f"- **Datum : WGS 1984**")
     st.write(f"- **Zona : 50S**")
-    
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col_map:
-    # Menambahkan tombol untuk memilih apakah segmentasi akan ditampilkan
-    show_segmentation = st.checkbox("Tampilkan Segmentasi pada Peta", value=False)
+    st.write("### Peta Segmentasi")
+    
+    # Tombol untuk menampilkan segmentasi
+    show_segmentation = st.checkbox("Tampilkan Segmentasi pada Peta", value=st.session_state['show_segmentation'])
+    st.session_state['show_segmentation'] = show_segmentation  # Perbarui status tombol
 
-    # Membuat peta dasar dengan Leafmap
-    m = leafmap.Map(center=[lat, lon], zoom=zoom_level)  # Fokus ke koordinat pusat segmen
+    # Membuat peta menggunakan Leafmap
+    m = leafmap.Map(center=[lat, lon], zoom=zoom_level)
     m.add_basemap("Esri.WorldImagery")
 
-    # Menambahkan data shapefile yang dipilih ke peta
+    # Menambahkan shapefile ke peta
     def style_function(feature):
-        return {
-            'fillColor': '#ff0000',  # Warna isian
-            'color': '#808080',      # Warna batas
-            'weight': 2 if show_segmentation else 0,              # Ketebalan batas
-            'fillOpacity': 0.5 if show_segmentation else 0  # Ubah opacity berdasarkan tombol
-        }
+        if show_segmentation:
+            # Jika segmentasi diaktifkan
+            return {
+                'fillColor': '#ff0000',
+                'color': '#808080',  # Warna batas
+                'weight': 2,         # Ketebalan batas
+                'fillOpacity': 0.5   # Transparansi isian
+            }
+        else:
+            # Jika segmentasi dimatikan
+            return {
+                'fillColor': 'none',  # Tidak ada warna isian
+                'color': '#808080',   # Tetap menampilkan garis batas
+                'weight': 0,          # Ketebalan batas
+                'fillOpacity': 0      # Isian transparan
+            }
 
+    # Tambahkan GeoDataFrame ke peta
     m.add_gdf(gdf, layer_name=selected_file_name, style_function=style_function)
-
-
-    # Menampilkan peta di Streamlit
     m.to_streamlit(width=800, height=600)
-
 
 # Menambahkan bagian About Author sebelum footer
 st.write("<hr>", unsafe_allow_html=True)
@@ -235,7 +269,6 @@ with col3:
         unsafe_allow_html=True
     )
 
-# Footer aplikasi
+# Footer
 st.write("<hr>", unsafe_allow_html=True)
 st.write("<div style='text-align: center;'>Dibuat oleh Tim Ababil 🕊️</div>", unsafe_allow_html=True)
-
