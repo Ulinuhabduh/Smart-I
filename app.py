@@ -78,7 +78,7 @@ if previous or next:
 
 # Mendapatkan file shapefile yang dipilih berdasarkan indeks
 shapefile_index = st.session_state['shapefile_index']
-selected_file_name = new_shapefiles[shapefile_index]
+selected_file_name = new_shapefiles[shapefile_index - 1]
 shapefile_path = os.path.join(new_shapefiles_folder, selected_file_name)
 
 # Membuat layout dengan dua kolom untuk informasi shapefile dan peta
