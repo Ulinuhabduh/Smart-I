@@ -96,21 +96,8 @@ with col_info:
     source_crs = gdf.crs
     target_crs = CRS.from_epsg(4326)
     transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
-    # Pastikan geometri valid dan tidak kosong
-    if gdf.geometry.is_empty.any():
-        st.error("Shapefile tidak memiliki geometri yang valid atau kosong.")
-    else:
-        union_geometry = gdf.geometry.unary_union
-        if union_geometry.is_empty:
-            st.error("Shapefile memiliki geometri gabungan yang kosong.")
-        else:
-            # Tangani GeometryCollection atau MultiPolygon
-            if union_geometry.geom_type == "GeometryCollection":
-                union_geometry = [geom for geom in union_geometry if geom.is_valid][0]
-            center = union_geometry.centroid.coords[0]
-
-            # Transform koordinat pusat ke WGS84
-            lon, lat = transformer.transform(center[0], center[1])
+    center = gdf.geometry.unary_union.centroid.coords[0]
+    lon, lat = transformer.transform(center[0], center[1])
 
     # Membaca data statistik
     if os.path.exists(statistik_file_path):
