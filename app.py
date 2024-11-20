@@ -96,7 +96,7 @@ with col_info:
     source_crs = gdf.crs
     target_crs = CRS.from_epsg(4326)
     transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
-    projected_center = gdf.geometry.unary_union.centroid.coords[0]
+    # projected_center = gdf.geometry.unary_union.centroid.coords[0]
     if source_crs is None:
         st.error("Shapefile tidak memiliki CRS yang valid.")
     else:
