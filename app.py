@@ -91,16 +91,35 @@ with col_info:
         <h3 style="text-align: center;">Informasi Segmentasi</h3>
     """, unsafe_allow_html=True)
 
-    # Membaca shapefile
-    gdf = gpd.read_file(shapefile_path)
-    source_crs = gdf.crs
-    target_crs = CRS.from_epsg(4326)
-    transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
-    # projected_center = gdf.geometry.unary_union.centroid.coords[0]
-    if source_crs is None:
-        st.error("Shapefile tidak memiliki CRS yang valid.")
-    else:
-        lon, lat = transformer.transform(projected_center[0], projected_center[1])
+    try:
+        # Membaca shapefile
+        gdf = gpd.read_file(shapefile_path)
+
+        if gdf.empty or 'geometry' not in gdf.columns or gdf.geometry.is_empty.all():
+            st.error("Shapefile tidak memiliki geometri yang valid.")
+        else:
+            # Validasi CRS
+            source_crs = gdf.crs
+            if source_crs is None:
+                st.error("Shapefile tidak memiliki CRS yang valid.")
+            else:
+                target_crs = CRS.from_epsg(4326)
+                transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+
+                # Periksa geometri gabungan
+                union_geometry = gdf.geometry.unary_union
+                if union_geometry.is_empty or union_geometry is None:
+                    st.error("Geometri gabungan kosong.")
+                else:
+                    if union_geometry.geom_type == "GeometryCollection":
+                        union_geometry = [geom for geom in union_geometry if geom.is_valid][0]
+                    projected_center = union_geometry.centroid.coords[0]
+                    lon, lat = transformer.transform(projected_center[0], projected_center[1])
+
+                    st.write(f"Koordinat Pusat: ({lat}, {lon})")
+    except Exception as e:
+        st.error(f"Gagal membaca shapefile: {e}")
+
 
     # Membaca data statistik
     if os.path.exists(statistik_file_path):
