@@ -92,18 +92,12 @@ with col_info:
     """, unsafe_allow_html=True)
 
     # Membaca shapefile
-    try:
-        gdf = gpd.read_file(shapefile_path)
-        if gdf is None or 'geometry' not in gdf.columns:
-            st.error("Shapefile tidak memiliki kolom geometri. Pastikan file .shp valid dan memiliki atribut geometry.")
-        elif gdf.geometry.is_empty.all():
-            st.error("Semua geometri dalam shapefile kosong.")
-        else:
-            # Operasi lainnya jika GeoDataFrame valid
-            projected_center = gdf.geometry.unary_union.centroid.coords[0]
-            lon, lat = transformer.transform(projected_center[0], projected_center[1])
-    except Exception as e:
-        st.error(f"Gagal membaca shapefile: {e}")
+    gdf = gpd.read_file(shapefile_path)
+    source_crs = gdf.crs
+    target_crs = CRS.from_epsg(4326)
+    transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+    projected_center = gdf.geometry.unary_union.centroid.coords[0]
+    lon, lat = transformer.transform(projected_center[0], projected_center[1])
 
     # Membaca data statistik
     if os.path.exists(statistik_file_path):
