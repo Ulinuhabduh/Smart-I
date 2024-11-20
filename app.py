@@ -68,12 +68,12 @@ if previous or next:
     st.session_state['show_segmentation'] = False  # Matikan tombol jika Next atau Previous ditekan
     if previous:
         st.session_state['shapefile_index'] -= 1
-        if st.session_state['shapefile_index'] < 1:
-            st.session_state['shapefile_index'] = len(new_shapefiles)  # Kembali ke akhir jika kurang dari 0
+        if st.session_state['shapefile_index'] < 0:
+            st.session_state['shapefile_index'] = len(new_shapefiles) - 1  # Kembali ke akhir jika kurang dari 0
     if next:
         st.session_state['shapefile_index'] += 1
         if st.session_state['shapefile_index'] >= len(new_shapefiles):
-            st.session_state['shapefile_index'] = 1  # Kembali ke awal jika melebihi jumlah file
+            st.session_state['shapefile_index'] = 0  # Kembali ke awal jika melebihi jumlah file
 
 
 # Mendapatkan file shapefile yang dipilih berdasarkan indeks
@@ -96,8 +96,8 @@ with col_info:
     source_crs = gdf.crs
     target_crs = CRS.from_epsg(4326)
     transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
-    projected_center = gdf.geometry.unary_union.centroid.coords[0]
-    lon, lat = transformer.transform(projected_center[0], projected_center[1])
+    center = gdf.geometry.unary_union.centroid.coords[0]
+    lon, lat = transformer.transform(center[0], center[1])
 
     # Membaca data statistik
     if os.path.exists(statistik_file_path):
@@ -153,7 +153,7 @@ with col_info:
         st.error("File data statistik tidak ditemukan.")
     
     # Menampilkan metadata
-    st.write("### Referensi Spasial:")
+    st.write("### Referensi Spasial")
     st.write(f"**Koordinat Pusat :** ({lat:.5f}, {lon:.5f})")
     st.write(f"- **Proyeksi : Universal Transverse Mercator**")
     st.write(f"- **Datum : WGS 1984**")
