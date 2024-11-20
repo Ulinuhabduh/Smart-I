@@ -9,7 +9,7 @@ st.set_page_config(page_title="Smart-I: Forest City Monitoring", layout="wide")
 
 # Menentukan jalur file logo
 smart_i_logo_path = "Images/logo_gabungan.png"  
-statistik_folder = "Images/statistik"  
+statistik_folder = "Images/Data"  
 
 st.image(smart_i_logo_path)
 
