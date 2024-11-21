@@ -73,7 +73,7 @@ if previous or next:
     if next:
         st.session_state['shapefile_index'] += 1
         if st.session_state['shapefile_index'] >= len(new_shapefiles):
-            st.session_state['shapefile_index'] = 1  # Kembali ke awal jika melebihi jumlah file
+            st.session_state['shapefile_index'] = 0  # Kembali ke awal jika melebihi jumlah file
 
 
 # Mendapatkan file shapefile yang dipilih berdasarkan indeks
