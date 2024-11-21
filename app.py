@@ -50,7 +50,7 @@ new_shapefiles = sorted(
 
 # Inisialisasi session state untuk indeks shapefile dan status tombol
 if 'shapefile_index' not in st.session_state:
-    st.session_state['shapefile_index'] = 1
+    st.session_state['shapefile_index'] = 0
 if 'show_segmentation' not in st.session_state:
     st.session_state['show_segmentation'] = False
 
@@ -69,11 +69,11 @@ if previous or next:
     if previous:
         st.session_state['shapefile_index'] -= 1
         if st.session_state['shapefile_index'] < 1:
-            st.session_state['shapefile_index'] = len(new_shapefiles) - 1  # Kembali ke akhir jika kurang dari 0
+            st.session_state['shapefile_index'] = len(new_shapefiles)  # Kembali ke akhir jika kurang dari 0
     if next:
         st.session_state['shapefile_index'] += 1
         if st.session_state['shapefile_index'] >= len(new_shapefiles):
-            st.session_state['shapefile_index'] = 1  # Kembali ke awal jika melebihi jumlah file
+            st.session_state['shapefile_index'] = 0  # Kembali ke awal jika melebihi jumlah file
 
 
 # Mendapatkan file shapefile yang dipilih berdasarkan indeks
