@@ -50,7 +50,7 @@ new_shapefiles = sorted(
 
 # Inisialisasi session state untuk indeks shapefile dan status tombol
 if 'shapefile_index' not in st.session_state:
-    st.session_state['shapefile_index'] = 0
+    st.session_state['shapefile_index'] = 1
 if 'show_segmentation' not in st.session_state:
     st.session_state['show_segmentation'] = False
 
